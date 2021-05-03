@@ -1,0 +1,57 @@
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Printer Setup Test</title>
+  <link rel="stylesheet" href="css/foundation.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body>
+
+
+
+
+  <div class="grid-y grid-padding-y" id="pagewrapper" role="region">
+
+    <div class="cell shrink" id="vheader">
+      <div class="grid-container">
+        <div class="grid-x grid-padding-x align-middle">
+          <div class="cell shrink">
+            <img id="logo" src="image/logo.jpg">
+          </div>
+          <div class="cell auto">
+            <div class="grid-x grid-padding-x align-middle">
+              <div class="cell auto"></div>
+              <div class="cell shrink">
+                <button type="button" id="finishbtn" class="button" onclick="javascript:onCloseClicked()">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cell flex-child-grow" id="vcontent">
+      <span>Printer name: <input id="name" /></span>
+      <span>Printer IP: <input id="ip" /></span>
+      <span>Printer Driver: <input id="driver" /></span>
+      <span>Printer Location: <input id="location" /></span>
+      <span>Printer Comment: <input id="comment" /></span>
+      <button id="createBtn" class="button" type="button">Create</button>
+    </div>
+  </div>
+
+
+
+
+  <script src="js/vendor/jquery.js"></script>
+  <script src="js/vendor/what-input.js"></script>
+  <script src="js/vendor/foundation.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

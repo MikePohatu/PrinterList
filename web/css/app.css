@@ -1,0 +1,72 @@
+.tabs, .tabs-content {
+    border: none;
+}
+
+img {
+    margin-bottom: 1rem;
+}
+
+#logo {
+    height: 60px;
+}
+
+.orbit-bullets button {
+    margin: 0 0 0 4px;
+    background-color: rgb(165, 165, 165);
+}
+
+.orbit-bullets button:hover {
+    cursor: pointer;
+    background-color: rgb(215, 215, 215);
+}
+
+.orbit-bullets button.is-active {
+    background: #1779ba;
+    opacity: 1;
+}
+
+.orbit-bullets button.is-active:hover {
+    background: #14679e;
+}
+
+.navigation-button, .navigation-button:focus {  
+    color: #1779ba;
+    background-color: transparent;
+}
+
+.navigation-button:hover {
+    color: #14679e;
+    background-color: rgba(10, 10, 10, 0.3);
+    cursor: pointer;
+}
+
+#finishbtn {
+    margin: 0;
+}
+
+#pagewrapper {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+}
+
+.page-content {
+    padding: 1rem 2rem;
+    margin: 0 2rem;
+    background: rgb(241, 241, 241);
+}
+
+.vfill {
+    height: 100%;
+}
+
+#vcontent {
+    padding-top: 0;
+}
+
+#vheader {
+    padding-bottom: 0;
+    padding-top: 0;
+}
