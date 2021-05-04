@@ -2,7 +2,7 @@ Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\Software\Classes\setupprinter]
 "URL Protocol"=""
-@="\"URL:SetupPrinter Protocol\""
+@="\"URL:Printer List Protocol\""
 
 ;[HKEY_LOCAL_MACHINE\Software\Classes\setupprinter\DefaultIcon]
 ;@="\"mycustproto.exe,1\""

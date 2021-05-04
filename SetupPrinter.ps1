@@ -26,36 +26,84 @@
     write-host "Done"
 }
 
-if ($args.Count -eq 0) {
-        start "https://apps.powerapps.com/play/5857f607-4e4c-4f03-8750-98dba9719588?tenantId=1eaef063-a550-402a-b1ed-0afd2e45fcc3&source=portal&screenColor=rgba(0%2C%20138%2C%200%2C%201)"
-} else {
-    Write-Host "Adding your printer. Please wait..."
-    $url = [uri]$args[0]
 
-    if ($url.Query) {
+#https://gist.github.com/WalternativE/450b155c45f81b14290f8ded8324a283
+Function Hash-String {
+    Param (
+        [Parameter(Mandatory=$true)][string]$ClearString
+    )
 
-        Add-Type -AssemblyName System.Web
-        $ParsedQueryString = [System.Web.HttpUtility]::ParseQueryString($url.Query)
+    $hasher = [System.Security.Cryptography.HashAlgorithm]::Create('sha256')
+    $hash = $hasher.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($ClearString))
 
-        #unpack the query params
-        $i = 0
-        $queryParams = New-Object -TypeName psobject
-        foreach($QueryStringObject in $ParsedQueryString){
-            $queryParams | Add-Member -MemberType NoteProperty -Name $QueryStringObject -Value $ParsedQueryString[$i]
-            $i++
-        }
-        SetupPrinter -Name $queryparams.name -IP $queryparams.ip -Driver $queryparams.driver -Comment $queryparams.comment -Location $queryparams.location
-        
-    }
-    start-sleep -seconds 3
+    $hashString = [System.BitConverter]::ToString($hash)
+    $hashString.Replace('-', '')
 }
 
+$conf = [PSCustomObject]@{
+    key = ''
+    hashes = @('')
+    launch = ''
+    vendor = ''
+    invalidKeyMessage = ''
+    missingKeyMessage = ''
+}
 
+try {
+    $conf = Get-Content "$($PSScriptRoot)\conf.json" | ConvertFrom-Json
+}
+catch {
+    Write-Host -ForegroundColor Red "`nError loading conf.json`n"
+    Read-Host "Press any key to close"
+    exit
+}
+
+if ($args.Count -eq 0) {
+    #no args. Launch the List Printers app uri
+    start $conf.launch
+} else {
+    #unpack the query params
+    $url = [uri]$args[0]
+    Add-Type -AssemblyName System.Web
+    $ParsedQueryString = [System.Web.HttpUtility]::ParseQueryString($url.Query)
+
+    $i = 0
+    $queryParams = New-Object -TypeName psobject
+    foreach($QueryStringObject in $ParsedQueryString){
+        $queryParams | Add-Member -MemberType NoteProperty -Name $QueryStringObject -Value $ParsedQueryString[$i]
+        $i++
+    }
+
+
+    if (-not ($conf.key -and $queryParams.key -and $conf.hashes)) {
+        # One of the keys or hash is missing
+        Write-Host -ForegroundColor Red "`n$($conf.missingKeyMessage)`n"
+        Read-Host "Press enter key to close"
+    } else {
+        $hash = Hash-String($conf.key + $queryParams.key)
+
+        #make sure hash is valid
+        if ($conf.hashes.Contains($hash)) {
+            Write-Host "Adding your printer. Please wait..."
+        
+
+            if ($url.Query) {
+                SetupPrinter -Name $queryparams.name -IP $queryparams.ip -Driver $queryparams.driver -Comment $queryparams.comment -Location $queryparams.location
+    
+                start-sleep -seconds 3
+            }
+        } else {
+            #keys don't match exit
+            Write-Host -ForegroundColor Red "`n$($conf.invalidKeyMessage)`n"
+            Read-Host "Press enter key to close"
+        }
+    }
+}
 # SIG # Begin signature block
 # MIInKAYJKoZIhvcNAQcCoIInGTCCJxUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBrINYDAcM2tZRx
-# m7XSxktL8oz9yd4PSthB1wy3wDe82KCCDUUwggZeMIIERqADAgECAhAmZhsR0Iwj
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCagsUKJTYymuH+
+# wtSDT1iJyMenlF8pxgcihnnh+LhNLKCCDUUwggZeMIIERqADAgECAhAmZhsR0Iwj
 # /9sh4hup89XbMA0GCSqGSIb3DQEBCwUAMHsxCzAJBgNVBAYTAlVTMQ4wDAYDVQQI
 # DAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjERMA8GA1UECgwIU1NMIENvcnAxNzA1
 # BgNVBAMMLlNTTC5jb20gRVYgQ29kZSBTaWduaW5nIEludGVybWVkaWF0ZSBDQSBS
@@ -131,19 +179,19 @@ if ($args.Count -eq 0) {
 # cDE3MDUGA1UEAwwuU1NMLmNvbSBFViBDb2RlIFNpZ25pbmcgSW50ZXJtZWRpYXRl
 # IENBIFJTQSBSMwIQJmYbEdCMI//bIeIbqfPV2zANBglghkgBZQMEAgEFAKCB1DAZ
 # BgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYB
-# BAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQg5Qk4oiQTIMKcJEGzvIq58FseG15hzRc4
-# P0TFg9bmoRkwaAYKKwYBBAGCNwIBDDFaMFigQIA+ADIAMABSAG8AYQBkACAAUABy
+# BAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQg8APrK7EIzIfI2/P/zIRpUpo2YiFB9N7d
+# bZZ4ZYPKejwwaAYKKwYBBAGCNwIBDDFaMFigQIA+ADIAMABSAG8AYQBkACAAUABy
 # AGkAbgB0AGUAcgBMAGkAcwB0ACAAUwBlAHQAdQBwACAAUwBjAHIAaQBwAHShFIAS
-# aHR0cHM6Ly8yMHJvYWQuY29tMA0GCSqGSIb3DQEBAQUABIIBAC37eZXR0wr9ehF2
-# jZD6TWphgRWB+vyZs4NX6YcLgqvTiBrHWHATtar8awTriIvkYKOagnHmTyAqIPoK
-# Jy8yKNDlAVpTB4rJ3p4IxYUBYW7RV/sQgn8aia9ogXXNiHXO5bwGzqucGGQDrk5f
-# Ks9PmrShaS5T72Z9D1OgVKfREFKTREQcl1vNC/YoJ29ydyf01WSdbUx6TdNEgq+4
-# 9SDV0kJZfMbpuTxu5DtVn25TgAxplXMK9piHiAOq/m3hE421hH1oCZFn3+T51tkV
-# Kk8bsrbJyBdbSinE4w0SsBDnIyQBBr9QHdGsCjXPZLWdAbS2YwCVebyiGAWcusOO
-# D3sFZMehghajMIIWnwYKKwYBBAGCNwMDATGCFo8wghaLBgkqhkiG9w0BBwKgghZ8
+# aHR0cHM6Ly8yMHJvYWQuY29tMA0GCSqGSIb3DQEBAQUABIIBAJDj9bDxdgEKZtTN
+# XuMBnNZf/8SkIEOsVhXhgDSxxQkY5dh2/mx81tYjypa3oX+FoLsz7Bu53zAsSbzz
+# GwZxhqLs6HnVy8W+wUxeZ1fB0kWD6n+D1ttdj9jwEWtyI7GKGR8XHyF4qCA5eaIu
+# tZ5Hx/SISuM+bnrOrFpDMtobvY1O5BeedNlfuZ1Rye8jvnT0xsi/WgoqVRPbXNdC
+# 5lVZW9Zmj5anJiT4fLa4ZxaavtIe4JhB21nJnK1/1pvU2IEEqMcCinxXLRjaaVGf
+# qLt89zMClfyjF0Ta/Y7Nmrp55jXA7sMORCdvVpiC6bz3HlyTFL8etmDbIXRtq6wE
+# wClcvOihghajMIIWnwYKKwYBBAGCNwMDATGCFo8wghaLBgkqhkiG9w0BBwKgghZ8
 # MIIWeAIBAzEPMA0GCWCGSAFlAwQCAQUAMHcGCyqGSIb3DQEJEAEEoGgEZjBkAgEB
-# BgwrBgEEAYKpMAEDBgEwMTANBglghkgBZQMEAgEFAAQg9gc8ZUdxzOI8mUzGzB/G
-# aszQFt1xrTSsdVHc9twFf4ECCAngD8rqw31sGA8yMDIxMDUwMzIzMzg0OFowAwIB
+# BgwrBgEEAYKpMAEDBgEwMTANBglghkgBZQMEAgEFAAQge+UGl5JwttPvBU/gXvHq
+# tn6rALMyjcDtksZI88LPnugCCDCVHrdLaYhdGA8yMDIxMDUwNDA0NTAwMFowAwIB
 # AaCCEsYwggXYMIIEwKADAgECAhEA5CcElfaMkdbQ7HtJTqTfHDANBgkqhkiG9w0B
 # AQsFADB+MQswCQYDVQQGEwJQTDEiMCAGA1UEChMZVW5pemV0byBUZWNobm9sb2dp
 # ZXMgUy5BLjEnMCUGA1UECxMeQ2VydHVtIENlcnRpZmljYXRpb24gQXV0aG9yaXR5
@@ -248,17 +296,17 @@ if ($args.Count -eq 0) {
 # CAwFVGV4YXMxEDAOBgNVBAcMB0hvdXN0b24xETAPBgNVBAoMCFNTTCBDb3JwMS8w
 # LQYDVQQDDCZTU0wuY29tIFRpbWVzdGFtcGluZyBJc3N1aW5nIFJTQSBDQSBSMQIQ
 # MThjvHwB3QN+Fpetzu2ARDANBglghkgBZQMEAgEFAKCCAWYwGgYJKoZIhvcNAQkD
-# MQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMTA1MDMyMzM4NDhaMC0G
+# MQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMTA1MDQwNDUwMDBaMC0G
 # CSqGSIb3DQEJNDEgMB4wDQYJYIZIAWUDBAIBBQChDQYJKoZIhvcNAQELBQAwLwYJ
-# KoZIhvcNAQkEMSIEIP1U8JILENIDKmvIFER/5bSR2m7mtbsmEP436VJqmeyMMIHJ
+# KoZIhvcNAQkEMSIEIGB3C/aT9D+56sRRx7Tuc50iXBzgk02lJDcj5gi2yL4sMIHJ
 # BgsqhkiG9w0BCRACLzGBuTCBtjCBszCBsAQg3FnWaRkGSoW2yNxIfHdTj/G7ZnPt
 # qz6D7q4t9uTrjxMwgYswd6R1MHMxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhh
 # czEQMA4GA1UEBwwHSG91c3RvbjERMA8GA1UECgwIU1NMIENvcnAxLzAtBgNVBAMM
 # JlNTTC5jb20gVGltZXN0YW1waW5nIElzc3VpbmcgUlNBIENBIFIxAhAxOGO8fAHd
-# A34Wl63O7YBEMA0GCSqGSIb3DQEBCwUABIIBAE1WHZ//67Fw+sLYxcIFBCIOxgLp
-# t1r7V6JnA1RiUCZlVYqdQmhVn/vhr53kZUBHqlUH1RtXf0P77ZsuWBVDBdeIuA79
-# 8YCYhYbKtlfYcRzv2iFFPKZV7B11zBqKo3uIOUbY/fnqdRH+bv5Nw6Zd9auiJnGB
-# UZd/BkDfy2HZKZlXkH1zgbEHXvJcilDVhra3P/LtyJIbAKc3LXs2XB9a6IVFKyGP
-# VGyEOj+iX3/k1Wt7JItXInIYCDTpWEHYb8RmJyplUuV3MbyBCb9Ct3GxGxwneIBq
-# BTRm84YcGT+tj4eyKMq5IXDGj6WKgpa0VmyWg1Mv6UjvlHmzBzIk/Cta9Ow=
+# A34Wl63O7YBEMA0GCSqGSIb3DQEBCwUABIIBAJx0lZzIc9nJazE+fLFRCFIzxsGt
+# 2IdxXZth9ob0udFgGyFMyrqJS5l0XWWYrYS4o7+oPg5lWMd1mUYGmfjTUCqd1Hfv
+# /rsQ6AdaOMc/OQE/9AhadPk3Up/0IvFWtupoaT8mkod+dLZ/C5s7OYuDbaan3Iqf
+# 2Egmk660zocubtvNTh/YhV8HgOuaYj+GaZ0g/awlCcuSNBhOqAlUMvY46LLK1MWQ
+# rvlgKclAtxQIdjC4xLXEusO33JA/oefvW2pYuMTrrRVE3y3PpVYuDRVAUC34TCHe
+# KgjcgstIIGpTzURsDBjqWkHv04hdzxFpwgJItWlXu7szhpUPNd52BTvNjeU=
 # SIG # End signature block

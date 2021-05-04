@@ -2,7 +2,7 @@ Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\Software\Classes\setupprinter]
 "URL Protocol"=""
-@="\"URL:SetupPrinter Protocol\""
+@="\"URL:Printer List Protocol\""
 
 ;[HKEY_LOCAL_MACHINE\Software\Classes\setupprinter\DefaultIcon]
 ;@="\"mycustproto.exe,1\""
@@ -12,4 +12,4 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\Software\Classes\setupprinter\shell\open]
 
 [HKEY_LOCAL_MACHINE\Software\Classes\setupprinter\shell\open\command]
-@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -executionpolicy bypass -nologo -File \"C:\\Program Files\\20Road\\PrinterList\\SetupPrinter.ps1\" %1"
+@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -executionpolicy bypass -nologo -File \"C:\\Program Files\\20Road\\PrinterList\\SetupPrinter.ps1\" \"%1\""

@@ -1,0 +1,8 @@
+{
+    vendor: "20Road",
+    launch: "UrlToPowerApp",
+    key: "RandomClientKey",
+    hashes: ["HashOfClientAndServerKey"],
+    invalidKeyMessage: "The key passed by the server is not authorized to run this utility. Hash not found.\nPlease contact your administrator",
+    missingKeyMessage: "Hashing key information missing.\nPlease contact your administrator"
+}
