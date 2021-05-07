@@ -88,7 +88,7 @@ if ($args.Count -eq 0) {
         
 
             if ($url.Query) {
-                SetupPrinter -Name $queryparams.name -IP $queryparams.ip -Driver $queryparams.driver -Comment $queryparams.comment -Location $queryparams.location
+                SetupPrinter -Name $queryparams.name -IP $queryparams.win_address -Driver $queryparams.win_driver -Comment $queryparams.comment -Location $queryparams.location
     
                 start-sleep -seconds 3
             }
